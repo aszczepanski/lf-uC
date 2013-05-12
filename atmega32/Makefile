@@ -39,3 +39,6 @@ fusew:
 	$(AVRDUDE) -U hfuse:w:$(HFUSE):m -U lfuse:w:$(LFUSE):m
 fuser:
 	$(AVRDUDE) -U hfuse:r:-:h -U lfuse:r:-:h
+
+clean:
+	rm $(TARGET) $(HEX) ./obj/*

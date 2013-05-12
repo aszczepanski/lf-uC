@@ -7,6 +7,10 @@
 int count;
 volatile int petla;
 
+float value;
+int l_speed, r_speed;
+
+
 ISR(TIMER0_COMP_vect) {
 	count++;
 	if (count == 100) {
@@ -40,8 +44,106 @@ void init_ports() {
 	PORTD = 0x0E;
 }
 
+void init_timers() {
+	// inicjalizacja timera 0 - opis bitow od str. 84 datasheeta
+	// ponizej to co jest wlaczone
+	// mode 2 - CTC (Clear Timer on Compare match)
+	// normal port operacion, OC2 disconnected
+	// zegar - CLK/1024 - taktowanie zegara 16MHz/1024 = 15625Hz
+	TCCR0=(1<<WGM01)|(1<<CS02)|(1<<CS00);
+	// wartosc przy ktorej zegar sie zeruje i generowane jest przerwanie
+	OCR0 = 156; // dla 156 czestotliwosc przerwan to ok. 100Hz
+	// odmaskowanie przerwania pochodzacego z timera 0
+	TIMSK |= (1<<OCIE0);
+
+	// inicjalizacja timera 1 - opis bitow od str. 112 datasheeta
+	// Clear OC1A/OC1B on compare match, set OC1A/OC1B at BOTTOM, (non-inverting mode)
+ 	// Fast PWM, 8-bit
+	// zegar bez skalowania, co daje czestotliwosc 16MHz/1/256=62.5kHz
+	TCCR1A=(1<<COM1A1)|(1<<COM1B1)|(1<<WGM10);
+	TCCR1B=(1<WGM12)|(1<<CS10);
+}
+
+void sensors_value() {
+	value = 0;
+
+	if (PINC & 0x02) { // SENS_1
+		value -= 6.5;
+	}
+	if (PINC & 0x04) { // SENS_2
+		value -= 5.5;
+	}
+	if (PINC & 0x08) { // SENS_3
+		value -= 4.5;
+	}
+	if (PINC & 0x10) { // SENS_4
+		value -= 3.5;
+	}
+	if (PINC & 0x20) { // SENS_5
+		value -= 2.5;
+	}
+	if (PINC & 0x40) { // SENS_6
+		value -= 1.5;
+	}
+	if (PINC & 0x80) { // SENS_7
+		value -= 0.5;
+	}
+	if (PINA & 0x80) { // SENS_8
+		value += 0.5;
+	}
+	if (PINA & 0x40) { // SENS_9
+		value += 1.5;
+	}
+	if (PINA & 0x20) { // SENS_10
+		value += 2.5;
+	}
+	if (PINA & 0x10) { // SENS_11
+		value += 3.5;
+	}
+	if (PINA & 0x08) { // SENS_12
+		value += 4.5;
+	}
+	if (PINA & 0x04) { // SENS_13
+		value += 5.5;
+	}
+	if (PINA & 0x02) { // SENS_14
+		value += 6.5;
+	}
+}
+
+void set_motors() {
+		
+	sensors_value();
+
+	l_speed = 50;
+	r_speed = 50;
+
+	OCR1A = l_speed;
+	OCR1B = r_speed;
+
+	if (l_speed > 0) {
+		PORTA |= 0x01;
+		PORTB &= 0xFE;
+	}
+	else {
+		PORTA &= 0xFE;
+		PORTB |= 0x01;
+	}
+	if (r_speed > 0) {
+		PORTB |= 0x02;
+		PORTB &= 0xFB;
+	}
+	else {
+		PORTB &= 0xFD;
+		PORTB |= 0x04;
+	}
+
+}
+
+
 int main(void) {
 	init_ports();
+	init_timers();
 	LCD_Initalize();
 	int i;
 	char c[2];
@@ -57,31 +159,12 @@ int main(void) {
 	count = 0;
 	petla = 0;
 
-	// inicjalizacja timera 1 - opis bitow od str. 112 datasheeta
-	// Clear OC1A/OC1B on compare match, set OC1A/OC1B at BOTTOM, (non-inverting mode)
- 	// Fast PWM, 8-bit
-	// zegar bez skalowania, co daje czestotliwosc 16MHz/256=62.5kHz
-	TCCR1A=(1<<COM1A1)|(1<<COM1B1)|(1<<WGM10);
-	TCCR1B=(1<WGM12)|(1<<CS10);
-
 	OCR1A = 45;
 	OCR1B = 45;
 
 	LCD_Clear();
 	LCD_WriteText("!!!");
 
-	// inicjalizacja timera 0 - opis bitow od str. 84 datasheeta
-	// ponizej to co jest wlaczone
-	// mode 2 - CTC (Clear Timer on Compare match)
-	// normal port operacion, OC2 disconnected
-	// zegar - CLK/1024 - taktowanie zegara 16MHz/1024 = 15625Hz
-	TCCR0=(1<<WGM01)|(1<<CS02)|(1<<CS00);
-
-	// wartosc przy ktorej zegar sie zeruje i generowane jest przerwanie
-	OCR0 = 156; // dla 156 czestotliwosc przerwan to ok. 100Hz
-
-	// odmaskowanie przerwania pochodzacego z timera 0
-	TIMSK |= (1<<OCIE0);
 
 	// wlaczenie obslugi przerwan
 	sei();
@@ -90,22 +173,8 @@ int main(void) {
 	int clk = 0;
 
 	while (1) {
-/*		if ((PINA|0xFE) == 0xFF) {
-			PORTC |= 0x01;			
-		}
-		else {
-			PORTC&= 0xFE;
-		}
-*/
 		if (petla) {
-			if (PORTA & 0x01) {
-				PORTA &= 0xFE;
-				PORTD |= 0x04;
-			}
-			else {
-				PORTD &= 0xFB;
-				PORTA |= 0x01;
-			}
+			// set_motors();
 
 			LCD_Clear();
 			LCD_WriteText(tab);
