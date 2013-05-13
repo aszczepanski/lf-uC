@@ -4,12 +4,19 @@
 
 #include "HD44780.h"
 
+#define kp 13
+#define ki 0
+#define kd 0
+#define Tp 100
+
 int count;
 volatile int petla;
 
 float value;
+short active[14], on_track;
 int l_speed, r_speed;
 
+int i;
 
 ISR(TIMER0_COMP_vect) {
 	count++;
@@ -66,48 +73,125 @@ void init_timers() {
 
 void sensors_value() {
 	value = 0;
+	on_track = 0;
 
-	if (PINC & 0x02) { // SENS_1
+	if ((PINC & 0x02) && (active[0] || active[1])) { // SENS_1
 		value -= 6.5;
+		active[0] = 1;
+		on_track = 1;
 	}
-	if (PINC & 0x04) { // SENS_2
+	else {
+		active[0] = 0;
+	}
+	if ((PINC & 0x04) && (active[0] || active[1] || active[2])) { // SENS_2
 		value -= 5.5;
+		active[1] = 1;
+		on_track = 1;
 	}
-	if (PINC & 0x08) { // SENS_3
+	else {
+		active[1] = 0;
+	}
+	if ((PINC & 0x08) && (active[1] || active[2] || active[3])) { // SENS_3
 		value -= 4.5;
+		active[2] = 1;
+		on_track = 1;
 	}
-	if (PINC & 0x10) { // SENS_4
+	else {
+		active[2] = 0;
+	}
+	if ((PINC & 0x10) && (active[2] || active[3] || active[4])) { // SENS_4
 		value -= 3.5;
+		active[3] = 1;
+		on_track = 1;
 	}
-	if (PINC & 0x20) { // SENS_5
+	else {
+		active[3] = 0;
+	}
+	if ((PINC & 0x20) && (active[3] || active[4] || active[5])) { // SENS_5
 		value -= 2.5;
+		active[4] = 1;
+		on_track = 1;
 	}
-	if (PINC & 0x40) { // SENS_6
+	else {
+		active[4] = 0;
+	}
+	if ((PINC & 0x40) && (active[4] || active[5] || active[6])) { // SENS_6
 		value -= 1.5;
+		active[5] = 1;
+		on_track = 1;
 	}
-	if (PINC & 0x80) { // SENS_7
+	else {
+		active[5] = 0;
+	}
+	if ((PINC & 0x80) && (active[5] || active[6] || active[7])) { // SENS_7
 		value -= 0.5;
+		active[6] = 1;
+		on_track = 1;
 	}
-	if (PINA & 0x80) { // SENS_8
+	else {
+		active[6] = 0;
+	}
+	if ((PINA & 0x80) && (active[6] || active[7] || active[8])) { // SENS_8
 		value += 0.5;
+		active[7] = 1;
+		on_track = 1;
 	}
-	if (PINA & 0x40) { // SENS_9
+	else {
+		active[7] = 0;
+	}
+	if ((PINA & 0x40) && (active[7] || active[8] || active[9])) { // SENS_9
 		value += 1.5;
+		active[8] = 1;
+		on_track = 1;
 	}
-	if (PINA & 0x20) { // SENS_10
+	else {
+		active[8] = 0;
+	}
+	if ((PINA & 0x20) && (active[8] || active[9] || active[10])) { // SENS_10
 		value += 2.5;
+		active[9] = 1;
+		on_track = 1;
 	}
-	if (PINA & 0x10) { // SENS_11
+	else {
+		active[9] = 0;
+	}
+	if ((PINA & 0x10) && (active[9] || active[10] || active[11])) { // SENS_11
 		value += 3.5;
+		active[10] = 1;
+		on_track = 1;
 	}
-	if (PINA & 0x08) { // SENS_12
+	else {
+		active[10] = 0;
+	}
+	if ((PINA & 0x08) && (active[10] || active[11] || active[12])) { // SENS_12
 		value += 4.5;
+		active[11] = 1;
+		on_track = 1;
 	}
-	if (PINA & 0x04) { // SENS_13
+	else {
+		active[11] = 0;
+	}
+	if ((PINA & 0x04) && (active[11] || active[12] || active[13])) { // SENS_13
 		value += 5.5;
+		active[12] = 1;
+		on_track = 1;
 	}
-	if (PINA & 0x02) { // SENS_14
+	else {
+		active[12] = 0;
+	}
+	if ((PINA & 0x02) && (active[12] || active[13])) { // SENS_14
 		value += 6.5;
+		active[13] = 1;
+		on_track = 1;
+	}
+	else {
+		active[13] = 0;
+	}
+
+	if (!on_track) {
+		for (i=0; i<14; i++) {
+			active[i] = 1;
+		}
 	}
 }
 
@@ -117,6 +201,11 @@ void set_motors() {
 
 	l_speed = 50;
 	r_speed = 50;
+
+	if (on_track) {
+		
+
+	}	
 
 	OCR1A = l_speed;
 	OCR1B = r_speed;
@@ -145,7 +234,6 @@ int main(void) {
 	init_ports();
 	init_timers();
 	LCD_Initalize();
-	int i;
 	char c[2];
 	c[1] = '\0';
 	for (i=3; i>=0; i--) {
