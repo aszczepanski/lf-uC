@@ -26,6 +26,10 @@ ISR(TIMER0_COMP_vect) {
 	}
 }
 
+ISR(INT1_vect) {
+
+}
+
 void init_ports() {
 	// A0 - silniki
 	// A1-A7 - SENS_14-SENS_8
@@ -69,6 +73,13 @@ void init_timers() {
 	// zegar bez skalowania, co daje czestotliwosc 16MHz/1/256=62.5kHz
 	TCCR1A=(1<<COM1A1)|(1<<COM1B1)|(1<<WGM10);
 	TCCR1B=(1<WGM12)|(1<<CS10);
+}
+
+void init_interrupts() {
+	// TO DO
+	//MCUCR |= 
+	//
+	GICR |= (1<<INT1);
 }
 
 void sensors_value() {
@@ -233,6 +244,7 @@ void set_motors() {
 int main(void) {
 	init_ports();
 	init_timers();
+	init_interrupts();
 	LCD_Initalize();
 	char c[2];
 	c[1] = '\0';
