@@ -259,7 +259,11 @@ int main(void) {
 	count = 0;
 	petla = 0;
 
-	OCR1A = 45;
+	PORTA |= (1<<PA0);
+	
+	PORTB |= (1<<PB1);
+
+	OCR1A = 145;
 	OCR1B = 45;
 
 	LCD_Clear();
@@ -277,13 +281,24 @@ int main(void) {
 			// set_motors();
 
 			LCD_Clear();
+
+			if (PINC&(1<<PC1)) {
+				OCR1A = 255;
+				LCD_WriteText("1");
+			}
+			else {
+				OCR1A = 0;
+				LCD_WriteText("0");
+			}
+/*
+			LCD_Clear();
 			LCD_WriteText(tab);
 			clk++;
 			tab[3] = (char)(clk%10+'0');
 			tab[2] = (char)((clk/10)%10+'0');
 			tab[1] = (char)((clk/100)%10+'0');
 			tab[0] = (char)((clk/1000)%10+'0');
-
+*/
 			petla = 0;
 		}
 	}
