@@ -7,7 +7,7 @@ OBJ_CPY = avr-objcopy
 IHEX = ihex
 EEPROM = .eeprom
 
-SRCS = main.c
+SRCS = main.c ir_decode.c
 OBJS=$(addprefix ./obj/, $(addsuffix .o, $(SRCS)))
 
 LFUSE = 0xe4

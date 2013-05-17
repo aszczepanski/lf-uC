@@ -20,7 +20,7 @@ int i;
 
 ISR(TIMER0_COMP_vect) {
 	count++;
-	if (count == 100) {
+	if (count == 50) {
 		petla = 1;
 		count = 0;
 	}
@@ -240,35 +240,119 @@ void set_motors() {
 
 }
 
+void print_sensors() {
+	LCD_Clear();
+	LCD_WriteText("Line Follower");
+	
+	LCD_GoTo(0,1);
+
+	if (PINC&(1<<PC1)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINC&(1<<PC2)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINC&(1<<PC3)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINC&(1<<PC4)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINC&(1<<PC5)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINC&(1<<PC6)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINC&(1<<PC7)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINA&(1<<PA7)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINA&(1<<PA6)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINA&(1<<PA5)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINA&(1<<PA4)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINA&(1<<PA3)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINA&(1<<PA2)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	if (PINA&(1<<PA1)) {
+		LCD_WriteText("0");
+	}
+	else {
+		LCD_WriteText("1");
+	}
+	LCD_WriteText(" =");
+
+
+}
 
 int main(void) {
 	init_ports();
 	init_timers();
 	init_interrupts();
 	LCD_Initalize();
-	char c[2];
-	c[1] = '\0';
-	for (i=3; i>=0; i--) {
-		c[0] = (char)(i+'0');
-		LCD_WriteText(c);
-		_delay_ms(1000);
-	}
-	LCD_Home();
-	LCD_WriteText("te");
 	
 	count = 0;
 	petla = 0;
 
-	PORTA |= (1<<PA0);
+	PORTB |= (1<<PB0);
 	
-	PORTB |= (1<<PB1);
+	PORTB |= (1<<PB2);
 
-	OCR1A = 145;
-	OCR1B = 45;
+	OCR1A = 0;
+	OCR1B = 0;
 
 	LCD_Clear();
-	LCD_WriteText("!!!");
-
+	LCD_WriteText("Line Follower");
 
 	// wlaczenie obslugi przerwan
 	sei();
@@ -280,16 +364,8 @@ int main(void) {
 		if (petla) {
 			// set_motors();
 
-			LCD_Clear();
+			print_sensors();
 
-			if (PINC&(1<<PC1)) {
-				OCR1A = 255;
-				LCD_WriteText("1");
-			}
-			else {
-				OCR1A = 0;
-				LCD_WriteText("0");
-			}
 /*
 			LCD_Clear();
 			LCD_WriteText(tab);
