@@ -247,90 +247,89 @@ void print_sensors() {
 	LCD_GoTo(0,1);
 
 	if (PINC&(1<<PC1)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINC&(1<<PC2)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINC&(1<<PC3)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINC&(1<<PC4)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINC&(1<<PC5)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINC&(1<<PC6)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINC&(1<<PC7)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINA&(1<<PA7)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINA&(1<<PA6)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINA&(1<<PA5)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINA&(1<<PA4)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINA&(1<<PA3)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINA&(1<<PA2)) {
-		LCD_WriteText("0");
+		LCD_WriteText("1");
 	}
 	else {
-		LCD_WriteText("1");
+		LCD_WriteText("0");
 	}
 	if (PINA&(1<<PA1)) {
-		LCD_WriteText("0");
-	}
-	else {
 		LCD_WriteText("1");
 	}
-	LCD_WriteText(" =");
+	else {
+		LCD_WriteText("0");
+	}
 
 
 }
