@@ -29,6 +29,11 @@ int main(void) {
 	int counter = (1<<3);
 	short running = 0;
 
+	PORTC |= (1<<PC0);
+	PORTC |= (1<<PC1);
+	PORTD |= (1<<PD6);
+	PORTB |= (1<<PB2);
+
 	while (1) {
 		if (Ir_key_press_flag) {
 			PORTC |= (1<<PC0);

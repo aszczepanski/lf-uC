@@ -1,22 +1,26 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <stdlib.h>
 
 #include "HD44780.h"
 
-#define kp 13
-#define ki 0
-#define kd 0
-#define Tp 100
+#define kp 11.0
+#define ki 0.0
+#define kd 0.0
+#define Tp 40.0
+float P, I, D, dif, pdif, rate, turn;
 
 int count;
 volatile int petla;
 
-float value;
 short active[14], on_track;
 int l_speed, r_speed;
 
+char tab[33];
+
 int i;
+short tsop;
 
 ISR(TIMER0_COMP_vect) {
 	count++;
@@ -82,118 +86,121 @@ void init_interrupts() {
 	GICR |= (1<<INT1);
 }
 
-void sensors_value() {
-	value = 0;
+void set_motors() {
+	
+	pdif = dif;
+
+	dif = 0;
 	on_track = 0;
 
-	if ((PINC & 0x02) && (active[0] || active[1])) { // SENS_1
-		value -= 6.5;
+	if ((PINA&(1<<PA1)) && (active[0] || active[1])) { // SENS_1
+		dif -= 6.5;
 		active[0] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[0] = 0;
 	}
-	if ((PINC & 0x04) && (active[0] || active[1] || active[2])) { // SENS_2
-		value -= 5.5;
+	if ((PINA&(1<<PA2)) && (active[0] || active[1] || active[2])) { // SENS_2
+		dif -= 5.5;
 		active[1] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[1] = 0;
 	}
-	if ((PINC & 0x08) && (active[1] || active[2] || active[3])) { // SENS_3
-		value -= 4.5;
+	if ((PINA&(1<<PA3)) && (active[1] || active[2] || active[3])) { // SENS_3
+		dif -= 4.5;
 		active[2] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[2] = 0;
 	}
-	if ((PINC & 0x10) && (active[2] || active[3] || active[4])) { // SENS_4
-		value -= 3.5;
+	if ((PINA&(1<<PA4)) && (active[2] || active[3] || active[4])) { // SENS_4
+		dif -= 3.5;
 		active[3] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[3] = 0;
 	}
-	if ((PINC & 0x20) && (active[3] || active[4] || active[5])) { // SENS_5
-		value -= 2.5;
+	if ((PINA&(1<<PA5)) && (active[3] || active[4] || active[5])) { // SENS_5
+		dif -= 2.5;
 		active[4] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[4] = 0;
 	}
-	if ((PINC & 0x40) && (active[4] || active[5] || active[6])) { // SENS_6
-		value -= 1.5;
+	if ((PINA&(1<<PA6)) && (active[4] || active[5] || active[6])) { // SENS_6
+		dif -= 1.5;
 		active[5] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[5] = 0;
 	}
-	if ((PINC & 0x80) && (active[5] || active[6] || active[7])) { // SENS_7
-		value -= 0.5;
+	if ((PINA&(1<<PA7)) && (active[5] || active[6] || active[7])) { // SENS_7
+		dif -= 0.5;
 		active[6] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[6] = 0;
 	}
-	if ((PINA & 0x80) && (active[6] || active[7] || active[8])) { // SENS_8
-		value += 0.5;
+	if ((PINC&(1<<PC7)) && (active[6] || active[7] || active[8])) { // SENS_8
+		dif += 0.5;
 		active[7] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[7] = 0;
 	}
-	if ((PINA & 0x40) && (active[7] || active[8] || active[9])) { // SENS_9
-		value += 1.5;
+	if ((PINC&(1<<PC6)) && (active[7] || active[8] || active[9])) { // SENS_9
+		dif += 1.5;
 		active[8] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[8] = 0;
 	}
-	if ((PINA & 0x20) && (active[8] || active[9] || active[10])) { // SENS_10
-		value += 2.5;
+	if ((PINC&(1<<PC5)) && (active[8] || active[9] || active[10])) { // SENS_10
+		dif += 2.5;
 		active[9] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[9] = 0;
 	}
-	if ((PINA & 0x10) && (active[9] || active[10] || active[11])) { // SENS_11
-		value += 3.5;
+	if ((PINC&(1<<PC4)) && (active[9] || active[10] || active[11])) { // SENS_11
+		dif += 3.5;
 		active[10] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[10] = 0;
 	}
-	if ((PINA & 0x08) && (active[10] || active[11] || active[12])) { // SENS_12
-		value += 4.5;
+	if ((PINC&(1<<PC3)) && (active[10] || active[11] || active[12])) { // SENS_12
+		dif += 4.5;
 		active[11] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[11] = 0;
 	}
-	if ((PINA & 0x04) && (active[11] || active[12] || active[13])) { // SENS_13
-		value += 5.5;
+	if ((PINC&(1<<PC2)) && (active[11] || active[12] || active[13])) { // SENS_13
+		dif += 5.5;
 		active[12] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[12] = 0;
 	}
-	if ((PINA & 0x02) && (active[12] || active[13])) { // SENS_14
-		value += 6.5;
+	if ((PINC&(1<<PC1)) && (active[12] || active[13])) { // SENS_14
+		dif += 6.5;
 		active[13] = 1;
-		on_track = 1;
+		on_track++;
 	}
 	else {
 		active[13] = 0;
@@ -203,116 +210,65 @@ void sensors_value() {
 		for (i=0; i<14; i++) {
 			active[i] = 1;
 		}
+		dif = 0;
 	}
-}
 
-void set_motors() {
-		
-	sensors_value();
-
-	l_speed = 50;
-	r_speed = 50;
-
+	
 	if (on_track) {
-		
+		dif = dif/(float)on_track;
 
-	}	
+	}
+	
+	P = dif*kp;
+	
+	I = I + dif;
+	I = i * ki;
 
-	OCR1A = l_speed;
-	OCR1B = r_speed;
+	rate = dif - pdif;
+	D = rate * kd;
 
-	if (l_speed > 0) {
-		PORTA |= 0x01;
-		PORTB &= 0xFE;
+	turn = round(P + I + D);
+	
+	if (tsop) {
+		l_speed = Tp + turn;
+		r_speed = Tp - turn;
 	}
 	else {
-		PORTA &= 0xFE;
-		PORTB |= 0x01;
+		l_speed = 0;
+		r_speed = 0;
+	}	
+	
+	if (l_speed > 0) {
+		PORTB |= (1<<PB0);
+		PORTA &= !(1<<PA0);
+	}
+	else {
+		PORTA |= (1<<PA0);
+		PORTB &= !(1<<PB0);
+//		l_speed *= (-1);
 	}
 	if (r_speed > 0) {
-		PORTB |= 0x02;
-		PORTB &= 0xFB;
+		PORTB |= (1<<PB2);
+		PORTB &= !(1<<PB1);
 	}
 	else {
-		PORTB &= 0xFD;
-		PORTB |= 0x04;
+		PORTB |= (1<<PB1);
+		PORTB &= !(1<<PB2);
+//		r_speed *= (-1);
 	}
+	
+//	OCR1A = l_speed;
+//	OCR1B = r_speed;
+	
+	OCR1A = 0;
+	OCR1B = 0;
 
 }
 
 void print_sensors() {
 	LCD_Clear();
-	LCD_WriteText("Line Follower");
-	
-	LCD_GoTo(0,1);
 
-	if (PINC&(1<<PC1)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC2)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC3)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC4)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC5)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC6)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC7)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINA&(1<<PA7)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINA&(1<<PA6)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINA&(1<<PA5)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINA&(1<<PA4)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINA&(1<<PA3)) {
+	if (PINA&(1<<PA1)) {
 		LCD_WriteText("1");
 	}
 	else {
@@ -324,12 +280,87 @@ void print_sensors() {
 	else {
 		LCD_WriteText("0");
 	}
-	if (PINA&(1<<PA1)) {
+	if (PINA&(1<<PA3)) {
 		LCD_WriteText("1");
 	}
 	else {
 		LCD_WriteText("0");
 	}
+	if (PINA&(1<<PA4)) {
+		LCD_WriteText("1");
+	}
+	else {
+		LCD_WriteText("0");
+	}
+	if (PINA&(1<<PA5)) {
+		LCD_WriteText("1");
+	}
+	else {
+		LCD_WriteText("0");
+	}
+	if (PINA&(1<<PA6)) {
+		LCD_WriteText("1");
+	}
+	else {
+		LCD_WriteText("0");
+	}
+	if (PINA&(1<<PA7)) {
+		LCD_WriteText("1");
+	}
+	else {
+		LCD_WriteText("0");
+	}
+	if (PINC&(1<<PC7)) {
+		LCD_WriteText("1");
+	}
+	else {
+		LCD_WriteText("0");
+	}
+	if (PINC&(1<<PC6)) {
+		LCD_WriteText("1");
+	}
+	else {
+		LCD_WriteText("0");
+	}
+	if (PINC&(1<<PC5)) {
+		LCD_WriteText("1");
+	}
+	else {
+		LCD_WriteText("0");
+	}
+	if (PINC&(1<<PC4)) {
+		LCD_WriteText("1");
+	}
+	else {
+		LCD_WriteText("0");
+	}
+	if (PINC&(1<<PC3)) {
+		LCD_WriteText("1");
+	}
+	else {
+		LCD_WriteText("0");
+	}
+	if (PINC&(1<<PC2)) {
+		LCD_WriteText("1");
+	}
+	else {
+		LCD_WriteText("0");
+	}
+	if (PINC&(1<<PC1)) {
+		LCD_WriteText("1");
+	}
+	else {
+		LCD_WriteText("0");
+	}
+
+	LCD_GoTo(0,1);
+	LCD_WriteText("l=");
+	itoa(l_speed,tab,10);
+	LCD_WriteText(tab);
+	
+	LCD_WriteText("   r=");
+	itoa(r_speed,tab,10);
+	LCD_WriteText(tab);
 
 
 }
@@ -339,6 +370,10 @@ int main(void) {
 	init_timers();
 	init_interrupts();
 	LCD_Initalize();
+
+	dif = I = 0;
+	
+	tsop = 1;
 	
 	count = 0;
 	petla = 0;
@@ -356,24 +391,12 @@ int main(void) {
 	// wlaczenie obslugi przerwan
 	sei();
 
-	char tab[5] = "0000";
-	int clk = 0;
-
 	while (1) {
 		if (petla) {
-			// set_motors();
+			set_motors();
 
 			print_sensors();
-
-/*
-			LCD_Clear();
-			LCD_WriteText(tab);
-			clk++;
-			tab[3] = (char)(clk%10+'0');
-			tab[2] = (char)((clk/10)%10+'0');
-			tab[1] = (char)((clk/100)%10+'0');
-			tab[0] = (char)((clk/1000)%10+'0');
-*/
+			
 			petla = 0;
 		}
 	}
