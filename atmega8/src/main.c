@@ -27,15 +27,10 @@ int main(void) {
 //	PORTD |= (1<<PD6);
 
 	int counter = (1<<3);
-	short running = 0;
-
-	PORTC |= (1<<PC0);
-	PORTC |= (1<<PC1);
-	PORTD |= (1<<PD6);
-	PORTB |= (1<<PB2);
+	short running = 1;
 
 	while (1) {
-		if (Ir_key_press_flag) {
+/*		if (Ir_key_press_flag) {
 			PORTC |= (1<<PC0);
 			PORTC |= (1<<PC1);
 			PORTD |= (1<<PD6);
@@ -51,9 +46,9 @@ int main(void) {
 			Ir_key_press_flag=0; 
 			command=0xff; 
 			address=0xff;
-		}
+		}*/
 
-/*		if (running) {
+		if (running) {
 			counter<<=1;
 			if (counter == (1<<4)) counter=1;
 			PORTC &= !(1<<PC0);
@@ -66,7 +61,7 @@ int main(void) {
 			else PORTD |= (1<<PD6);
 
 			_delay_ms(500);
-		}*/
+		}
 	}
 
 	return 0;
