@@ -5,6 +5,7 @@
 
 #include "HD44780.h"
 
+// zmienne wykorzystywane w algorytmie PID
 #define kp 10.0
 #define ki 0.0
 #define kd 0.0
@@ -22,6 +23,8 @@ char tab[33];
 
 volatile short tsop;
 
+// obsluga przerwania timera0
+// zeby co okreslony czas (100x/s) sprawdzac stan czujnikow i ustawiac predkosc silnikow
 ISR(TIMER0_COMP_vect) {
 //	count++;
 //	if (count == 50) {
@@ -30,6 +33,8 @@ ISR(TIMER0_COMP_vect) {
 //	}
 }
 
+// obsluga przerwania INT1
+// pochodzi z atmegi8, sluzy wlaczeniu/wylaczeniu robota
 ISR(INT1_vect) {
 	tsop ^= 1;
 }
@@ -80,9 +85,10 @@ void init_timers() {
 }
 
 void init_interrupts() {
+	// inicjalizacja przerwan zewnetrznych - od str. 67 datasheeta
 	// MCU Control Register
 	// The rising edge of INT1 generates an interrupt request
-	MCUCR |= ((1<<ISC11)|(1<<ISC10)); 
+	MCUCR |= ((1<<ISC11)|(1<<ISC10)); // mozna zmienic na cos innego, zobaczymy
 	// When the INT1 bit is set (one) and the I-bit in the Status Register (SREG) is set (one), the external pin interrupt is enabled 
 	GICR |= (1<<INT1);
 }
@@ -93,6 +99,8 @@ void set_motors() {
 
 	dif = 0;
 	on_track = 0;
+
+	// odczyt stanu sensorow
 
 	if ((PINA&(1<<PA1)) && (active[0] || active[1])) { // SENS_1
 		dif -= 6.5;
@@ -265,6 +273,9 @@ void set_motors() {
 
 }
 
+// procedura wypisujaca na ekran stan kazdego z czujnikow
+// oraz predkosc silnikow
+// ekran nalezy podlaczyc przed uruchomieniem robota!!!
 void print_sensors() {
 	LCD_Clear();
 

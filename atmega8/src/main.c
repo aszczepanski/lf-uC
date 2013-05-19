@@ -8,9 +8,13 @@ int main(void) {
 
 	short tsop = 0;
 
+	// inicjalizacja odbiornika podczerwieni TSOP
 	ir_init();
 	
+	// wlaczenie obslugi przerwan
 	sei();
+
+	// ustawienie portow I/O
 
 	// LED1
 	DDRC |= (1<<PC0);
@@ -30,7 +34,7 @@ int main(void) {
 
 	// TSOP
 	DDRB |= (1<<PB0);
-	PORTB &= !(1<<PB0);
+	PORTB &= ~(1<<PB0);
 
 	int counter = (1<<3);
 	short running = 1;
