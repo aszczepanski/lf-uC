@@ -6,6 +6,8 @@
 
 int main(void) {
 
+	short tsop = 0;
+
 	ir_init();
 	
 	sei();
@@ -25,6 +27,10 @@ int main(void) {
 	// LED4
 	DDRD |= (1<<PD6);
 //	PORTD |= (1<<PD6);
+
+	// TSOP
+	DDRB |= (1<<PB0);
+	PORTB &= !(1<<PB0);
 
 	int counter = (1<<3);
 	short running = 1;
@@ -49,6 +55,10 @@ int main(void) {
 		}*/
 
 		if (running) {
+			tsop ^= 1;
+			if (tsop) PORTB |= (1<<PB0);
+			else PORTB &= !(1<<PB0);
+
 			counter<<=1;
 			if (counter == (1<<4)) counter=1;
 			PORTC &= !(1<<PC0);

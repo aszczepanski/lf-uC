@@ -5,33 +5,33 @@
 
 #include "HD44780.h"
 
-#define kp 11.0
+#define kp 10.0
 #define ki 0.0
 #define kd 0.0
 #define Tp 40.0
 float P, I, D, dif, pdif, rate, turn;
 
-int count;
+volatile int count;
 volatile int petla;
 
 short active[14], on_track;
 int l_speed, r_speed;
 
+int i;
 char tab[33];
 
-int i;
-short tsop;
+volatile short tsop;
 
 ISR(TIMER0_COMP_vect) {
-	count++;
-	if (count == 50) {
+//	count++;
+//	if (count == 50) {
 		petla = 1;
-		count = 0;
-	}
+//		count = 0;
+//	}
 }
 
 ISR(INT1_vect) {
-
+	tsop ^= 1;
 }
 
 void init_ports() {
@@ -80,9 +80,10 @@ void init_timers() {
 }
 
 void init_interrupts() {
-	// TO DO
-	//MCUCR |= 
-	//
+	// MCU Control Register
+	// The rising edge of INT1 generates an interrupt request
+	MCUCR |= ((1<<ISC11)|(1<<ISC10)); 
+	// When the INT1 bit is set (one) and the I-bit in the Status Register (SREG) is set (one), the external pin interrupt is enabled 
 	GICR |= (1<<INT1);
 }
 
@@ -222,16 +223,16 @@ void set_motors() {
 	P = dif*kp;
 	
 	I = I + dif;
-	I = i * ki;
+	I = I * ki;
 
 	rate = dif - pdif;
 	D = rate * kd;
 
-	turn = round(P + I + D);
+	turn = P + I + D;
 	
 	if (tsop) {
-		l_speed = Tp + turn;
-		r_speed = Tp - turn;
+		l_speed = round(Tp + turn);
+		r_speed = round(Tp - turn);
 	}
 	else {
 		l_speed = 0;
@@ -240,28 +241,27 @@ void set_motors() {
 	
 	if (l_speed > 0) {
 		PORTB |= (1<<PB0);
-		PORTA &= !(1<<PA0);
+		PORTA &= ~(1<<PA0);
 	}
 	else {
 		PORTA |= (1<<PA0);
-		PORTB &= !(1<<PB0);
-//		l_speed *= (-1);
+		PORTB &= ~(1<<PB0);
 	}
+
 	if (r_speed > 0) {
 		PORTB |= (1<<PB2);
-		PORTB &= !(1<<PB1);
+		PORTB &= ~(1<<PB1);
 	}
 	else {
 		PORTB |= (1<<PB1);
-		PORTB &= !(1<<PB2);
-//		r_speed *= (-1);
+		PORTB &= ~(1<<PB2);
 	}
 	
-//	OCR1A = l_speed;
-//	OCR1B = r_speed;
+	OCR1A = abs(l_speed);
+	OCR1B = abs(r_speed);
 	
-	OCR1A = 0;
-	OCR1B = 0;
+//	OCR1A = 0;
+//	OCR1B = 0;
 
 }
 
@@ -378,12 +378,24 @@ int main(void) {
 	count = 0;
 	petla = 0;
 
-	PORTB |= (1<<PB0);
-	
-	PORTB |= (1<<PB2);
-
 	OCR1A = 0;
 	OCR1B = 0;
+
+	// lewe do przodu
+//	PORTB |= (1<<PB0);
+//	PORTA &= ~(1<<PA0);
+
+	// lewe do tylu
+//	PORTA |= (1<<PA0);
+//	PORTB &= ~(1<<PB0);
+
+	// prawe do przodu
+//	PORTB |= (1<<PB2);
+//	PORTB &= ~(1<<PB1);
+
+	// prawe do tylu
+//	PORTB |= (1<<PB1);
+//	PORTB &= ~(1<<PB2);
 
 	LCD_Clear();
 	LCD_WriteText("Line Follower");
@@ -395,7 +407,7 @@ int main(void) {
 		if (petla) {
 			set_motors();
 
-			print_sensors();
+//			print_sensors();
 			
 			petla = 0;
 		}
