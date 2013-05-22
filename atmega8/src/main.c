@@ -40,6 +40,12 @@ int main(void) {
 	short running = 1;
 
 	while (1) {
+    if(!(PINB && (1<<PB1))) {
+      PORTC |= (1<<PC0);
+      PORTC |= (1<<PC1);
+      PORTD |= (1<<PD6);
+      PORTB |= (1<<PB2);
+    }
 /*		if (Ir_key_press_flag) {
 			PORTC |= (1<<PC0);
 			PORTC |= (1<<PC1);
@@ -59,6 +65,7 @@ int main(void) {
 		}*/
 
 		if (running) {
+      /*
 			tsop ^= 1;
 			if (tsop) PORTB |= (1<<PB0);
 			else PORTB &= !(1<<PB0);
@@ -75,6 +82,7 @@ int main(void) {
 			else PORTD |= (1<<PD6);
 
 			_delay_ms(500);
+      */
 		}
 	}
 
