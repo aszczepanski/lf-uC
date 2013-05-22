@@ -88,8 +88,8 @@ void init_timers() {
 void init_interrupts() {
 	// inicjalizacja przerwan zewnetrznych - od str. 67 datasheeta
 	// MCU Control Register
-	// The rising edge of INT1 generates an interrupt request
-	MCUCR |= ((1<<ISC11)|(1<<ISC10)); // mozna zmienic na cos innego, zobaczymy
+	//Any logical change on INT1 generates an interrupt request.
+	MCUCR |= (1<<ISC10);
 	// When the INT1 bit is set (one) and the I-bit in the Status Register (SREG) is set (one), the external pin interrupt is enabled 
 	GICR |= (1<<INT1);
 }
