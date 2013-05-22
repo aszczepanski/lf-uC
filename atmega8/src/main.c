@@ -221,26 +221,6 @@ int main(void) {
         }
       }
     }
-    /*
-		if (address == power_off) {
-			PORTC |= (1<<PC0);
-			PORTC |= (1<<PC1);
-			PORTD |= (1<<PD6);
-			PORTB |= (1<<PB2);
-			if (!address) {
-				running = 1;
-				PORTC |= (1<<PC0);
-				PORTC |= (1<<PC1);
-				PORTD |= (1<<PD6);
-				PORTB |= (1<<PB2);
-			}
-
-			Ir_key_press_flag=0;
-			command=0xff;
-			address=0xff;
-		}
-    */
-
 		if (running) {
       /*
 			tsop ^= 1;
