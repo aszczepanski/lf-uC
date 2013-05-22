@@ -191,17 +191,26 @@ int main(void) {
 	short running = 1;
   uint cmd;
   u8 out;
-  PORTC &= !(1<<PC0);
+  int on_state = 0;
 
 	while (1) {
     cmd = detect();
     if(cmd != -1) {
       out = cmd & 0b0000000000111111;
       if(out == 12) {
-        PORTC |= (1<<PC0);
-        PORTC |= (1<<PC1);
-        PORTD |= (1<<PD6);
-        PORTB |= (1<<PB2);
+        on_state = !on_state;
+        if(on_state) {
+          PORTC |= (1<<PC0);
+          PORTC |= (1<<PC1);
+          PORTD |= (1<<PD6);
+          PORTB |= (1<<PB2);
+        }
+        else {
+          PORTC &= !(1<<PC0);
+          PORTC &= !(1<<PC1);
+          PORTD &= !(1<<PD6);
+          PORTB &= !(1<<PB2);
+        }
       }
     }
     /*
