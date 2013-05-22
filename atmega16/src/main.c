@@ -26,18 +26,18 @@ volatile short tsop;
 // obsluga przerwania timera0
 // zeby co okreslony czas (100x/s) sprawdzac stan czujnikow i ustawiac predkosc silnikow
 ISR(TIMER0_COMP_vect) {
-	count++;
-	if (count == 50) {
+//	count++;
+//	if (count == 50) {
 		petla = 1;
-		count = 0;
-	}
+//		count = 0;
+//	}
 }
 
 // obsluga przerwania INT1
 // pochodzi z atmegi8, sluzy wlaczeniu/wylaczeniu robota
 ISR(INT1_vect) {
-//	tsop ^= 1;
-	tsop = 0;
+	tsop ^= 1;
+//	tsop = 0;
 }
 
 void init_ports() {
@@ -420,7 +420,7 @@ int main(void) {
 		if (petla) {
 			set_motors();
 
-			print_sensors();
+//			print_sensors();
 			
 			petla = 0;
 		}
