@@ -202,7 +202,7 @@ int main(void) {
       if(out == POWER_OFF) {
         if(-1 == toggle_state) toggle_state = toggle;
         if(toggle_state == toggle) {
-          on_state = !on_state;
+          on_state = on_state ^ 1;
           toggle_state = toggle_state ^ 1;
           if(on_state) {
             PORTC |= (1<<PC0);
