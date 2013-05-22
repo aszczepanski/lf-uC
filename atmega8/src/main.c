@@ -4,6 +4,7 @@
 
 // Odbiornik podczerwieni SFH5110  przyłączona do portu  PB0 
 #define RC5_IN   (PINB & (1<<PB1))
+#define POWER_OFF 12
 
 //
 typedef unsigned char u8;
@@ -189,27 +190,32 @@ int main(void) {
 
 	int counter = (1<<3);
 	short running = 1;
-  uint cmd;
+  uint cmd, toggle;
   u8 out;
-  int on_state = 0;
+  int on_state = 0, toggle_state = -1;
 
 	while (1) {
     cmd = detect();
     if(cmd != -1) {
-      out = cmd & 0b0000000000111111;
-      if(out == 12) {
-        on_state = !on_state;
-        if(on_state) {
-          PORTC |= (1<<PC0);
-          PORTC |= (1<<PC1);
-          PORTD |= (1<<PD6);
-          PORTB |= (1<<PB2);
-        }
-        else {
-          PORTC &= !(1<<PC0);
-          PORTC &= !(1<<PC1);
-          PORTD &= !(1<<PD6);
-          PORTB &= !(1<<PB2);
+      out    = cmd & 0b0000000000111111;
+      toggle = (cmd & 0b0000100000000000) >> 11;
+      if(out == POWER_OFF) {
+        if(-1 == toggle_state) toggle_state = toggle;
+        if(toggle_state == toggle) {
+          on_state = !on_state;
+          toggle_state = toggle_state ^ 1;
+          if(on_state) {
+            PORTC |= (1<<PC0);
+            PORTC |= (1<<PC1);
+            PORTD |= (1<<PD6);
+            PORTB |= (1<<PB2);
+          }
+          else {
+            PORTC &= !(1<<PC0);
+            PORTC &= !(1<<PC1);
+            PORTD &= !(1<<PD6);
+            PORTB &= !(1<<PB2);
+          }
         }
       }
     }
