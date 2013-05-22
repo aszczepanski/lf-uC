@@ -5,7 +5,8 @@
 // Odbiornik podczerwieni SFH5110  przyłączona do portu  PB0 
 #define RC5_IN   (PINB & (1<<PB1))
 #define POWER_OFF 12
-#define ADC_VREF_TYPE ((0<<REFS1) | (0<<REFS0) | (1<<ADLAR))
+#define RC5_DEVICE 0
+#define ADC_VREF_TYPE ((0<<REFS1) | (1<<REFS0) | (1<<ADLAR))
 #define VOLTAGE_TRESHOLD 0.75
 
 //
@@ -192,7 +193,7 @@ int main(void) {
 
 	int counter = (1<<3);
 	short running = 1;
-  uint cmd, toggle;
+  uint cmd, toggle, device;
   u8 out;
   int on_state = 0, toggle_state = -1;
 
@@ -201,16 +202,25 @@ int main(void) {
     cmd = detect();
     if(cmd != -1) {
       out    = cmd & 0b0000000000111111;
+      device = (cmd & 0b000001111000000) >> 6;
       toggle = (cmd & 0b0000100000000000) >> 11;
-      if(out == POWER_OFF) {
+      if(out == POWER_OFF && device == RC5_DEVICE) {
         if(-1 == toggle_state) toggle_state = toggle;
         if(toggle_state == toggle) {
           on_state ^= 1;
           toggle_state ^= 1;
           if(on_state) {
+            PORTC |= (1<<PC0);
+            PORTC |= (1<<PC1);
+            PORTD |= (1<<PD6);
+            PORTB |= (1<<PB2);
             PORTB |= (1<<PB0);
           }
           else {
+            PORTC &= !(1<<PC0);
+            PORTC &= !(1<<PC1);
+            PORTD &= !(1<<PD6);
+            PORTB &= !(1<<PB2);
             PORTB &= ~(1<<PB0);
           }
         }
@@ -218,6 +228,7 @@ int main(void) {
     }
 
     // battery low
+    /* 
     ADMUX = ADC_VREF_TYPE | (1<<MUX2);
     ADCSRA|=(1<<ADEN);
     ADCSRA|=(1<<ADPS1);
@@ -249,6 +260,7 @@ int main(void) {
       PORTD |= (1<<PD6);
       PORTB |= (1<<PB2);
     }
+    */
 	}
 
 	return 0;
