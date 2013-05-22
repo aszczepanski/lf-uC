@@ -6,10 +6,10 @@
 #include "HD44780.h"
 
 // zmienne wykorzystywane w algorytmie PID
-#define kp 7.0
+#define kp 6.0
 #define ki 0.0
 #define kd 0.0
-#define Tp 48.0
+#define Tp 40.0
 float P, I, D, dif, pdif, rate, turn;
 
 volatile int count;
