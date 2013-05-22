@@ -5,6 +5,8 @@
 // Odbiornik podczerwieni SFH5110  przyłączona do portu  PB0 
 #define RC5_IN   (PINB & (1<<PB1))
 #define POWER_OFF 12
+#define ADC_VREF_TYPE ((0<<REFS1) | (0<<REFS0) | (1<<ADLAR))
+#define VOLTAGE_TRESHOLD 0.75
 
 //
 typedef unsigned char u8;
@@ -216,8 +218,14 @@ int main(void) {
     }
 
     // battery low
-    /*
-    if (running) {
+    ADMUX = ADC_VREF_TYPE | (1<<MUX2);
+    ADCSRA|=(1<<ADEN);
+    ADCSRA|=(1<<ADPS1);
+    ADCSRA|=(1<<ADPS2);
+    ADCSRA|=(1<<ADSC);
+    while((ADCSRA & (1<<ADSC)));
+
+    if (ADCL < VOLTAGE_TRESHOLD*255) {
       tsop ^= 1;
       if (tsop) PORTB |= (1<<PB0);
       else PORTB &= !(1<<PB0);
@@ -233,9 +241,14 @@ int main(void) {
       else if (counter&(1<<2)) PORTB |= (1<<PB2);
       else PORTD |= (1<<PD6);
 
-      _delay_ms(500);
+      _delay_ms(10);
     }
-    */
+    else {
+      PORTC |= (1<<PC0);
+      PORTC |= (1<<PC1);
+      PORTD |= (1<<PD6);
+      PORTB |= (1<<PB2);
+    }
 	}
 
 	return 0;
