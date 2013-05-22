@@ -6,10 +6,10 @@
 #include "HD44780.h"
 
 // zmienne wykorzystywane w algorytmie PID
-#define kp 10.0
+#define kp 7.0
 #define ki 0.0
 #define kd 0.0
-#define Tp 40.0
+#define Tp 48.0
 float P, I, D, dif, pdif, rate, turn;
 
 volatile int count;
@@ -26,17 +26,18 @@ volatile short tsop;
 // obsluga przerwania timera0
 // zeby co okreslony czas (100x/s) sprawdzac stan czujnikow i ustawiac predkosc silnikow
 ISR(TIMER0_COMP_vect) {
-//	count++;
-//	if (count == 50) {
+	count++;
+	if (count == 50) {
 		petla = 1;
-//		count = 0;
-//	}
+		count = 0;
+	}
 }
 
 // obsluga przerwania INT1
 // pochodzi z atmegi8, sluzy wlaczeniu/wylaczeniu robota
 ISR(INT1_vect) {
-	tsop ^= 1;
+//	tsop ^= 1;
+	tsop = 0;
 }
 
 void init_ports() {
@@ -384,8 +385,9 @@ int main(void) {
 
 	dif = I = 0;
 	
-	tsop = 1;
-	
+//	tsop = 1;
+	tsop=0;
+		
 	count = 0;
 	petla = 0;
 
@@ -418,7 +420,7 @@ int main(void) {
 		if (petla) {
 			set_motors();
 
-//			print_sensors();
+			print_sensors();
 			
 			petla = 0;
 		}
