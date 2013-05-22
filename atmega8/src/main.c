@@ -209,12 +209,14 @@ int main(void) {
             PORTC |= (1<<PC1);
             PORTD |= (1<<PD6);
             PORTB |= (1<<PB2);
+            PORTB != (1<<PB0);
           }
           else {
             PORTC &= !(1<<PC0);
             PORTC &= !(1<<PC1);
             PORTD &= !(1<<PD6);
             PORTB &= !(1<<PB2);
+            PORTB &= ~(1<<PB0);
           }
         }
       }
