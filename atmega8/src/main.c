@@ -2,7 +2,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-// Odbiornik podczerwieni SFH5110  przyłączona do portu  PB0 
+// Odbiornik podczerwieni TSOP4836 przyłączony do portu  PB1 
 #define RC5_IN   (PINB & (1<<PB1))
 #define POWER_OFF 12
 #define RC5_DEVICE 0
@@ -29,17 +29,12 @@ void init_rc5()
   TCCR0 = (1<<CS00);  // włącza Timer0  
   TIMSK = (1<<TOIE0); // włącza przerwanie "Timer0 Overflow"
 
-/*
-  //atmega88
-  TCCR0B = (1<<CS00);
-  TIMSK0 = (1<<TOIE0);
-*/
   // Zezwala na przerwania 
   sei();
 }
 
 //---------------------------------------------------------------
-// Procedura obsługi przerwania  Timer0 Overflow"
+// Procedura obsługi przerwania  Timer0 Overflow
 //---------------------------------------------------------------
 ISR(TIMER0_OVF_vect)
 {
@@ -83,7 +78,7 @@ ISR(TIMER0_OVF_vect)
     while(RC5_IN)  
          if(timerH>=16)  return command = -1 ;
 
-    // Pomiar czasu trwani niskiego poziom syganłu 
+    // Pomiar czasu trwania niskiego poziom syganłu 
     // w pierwszym bicie startowym.
     // Jeśli nie wykryje rosnącego zbocza sygnału w ciągu  
     // 1ms, to kończy działanie funkcji z błędem 
@@ -193,74 +188,74 @@ int main(void) {
 
 	int counter = (1<<3);
 	short running = 1;
-  uint cmd, toggle, device;
-  u8 out;
-  int on_state = 0, toggle_state = -1;
+	uint cmd, toggle, device;
+	u8 out;
+	int on_state = 0, toggle_state = -1;
 
 	while (1) {
-    // button pressed
-    cmd = detect();
-    if(cmd != -1) {
-      out    = cmd & 0b0000000000111111;
-      device = (cmd & 0b000001111000000) >> 6;
-      toggle = (cmd & 0b0000100000000000) >> 11;
-      if(out == POWER_OFF && device == RC5_DEVICE) {
-        if(-1 == toggle_state) toggle_state = toggle;
-        if(toggle_state == toggle) {
-          on_state ^= 1;
-          toggle_state ^= 1;
-          if(on_state) {
-            PORTC |= (1<<PC0);
-            PORTC |= (1<<PC1);
-            PORTD |= (1<<PD6);
-            PORTB |= (1<<PB2);
-            PORTB |= (1<<PB0);
-          }
-          else {
-            PORTC &= !(1<<PC0);
-            PORTC &= !(1<<PC1);
-            PORTD &= !(1<<PD6);
-            PORTB &= !(1<<PB2);
-            PORTB &= ~(1<<PB0);
-          }
-        }
-      }
-    }
+		// button pressed
+		cmd = detect();
+		if(cmd != -1) {
+			out = cmd & 0b0000000000111111;
+			device = (cmd & 0b000001111000000) >> 6;
+			toggle = (cmd & 0b0000100000000000) >> 11;
+			if(out == POWER_OFF && device == RC5_DEVICE) {
+				if(-1 == toggle_state) toggle_state = toggle;
+				if(toggle_state == toggle) {
+					on_state ^= 1;
+					toggle_state ^= 1;
+					if(on_state) {
+						PORTC |= (1<<PC0);
+						PORTC |= (1<<PC1);
+						PORTD |= (1<<PD6);
+						PORTB |= (1<<PB2);
+						PORTB |= (1<<PB0);
+					}
+					else {
+						PORTC &= !(1<<PC0);
+						PORTC &= !(1<<PC1);
+						PORTD &= !(1<<PD6);
+						PORTB &= !(1<<PB2);
+						PORTB &= ~(1<<PB0);
+					}
+				}
+			}
+		}
 
-    // battery low
-    /* 
-    ADMUX = ADC_VREF_TYPE | (1<<MUX2);
-    ADCSRA|=(1<<ADEN);
-    ADCSRA|=(1<<ADPS1);
-    ADCSRA|=(1<<ADPS2);
-    ADCSRA|=(1<<ADSC);
-    while((ADCSRA & (1<<ADSC)));
+		// battery low
+	/*
+	ADMUX = ADC_VREF_TYPE | (1<<MUX2);
+	ADCSRA|=(1<<ADEN);
+	ADCSRA|=(1<<ADPS1);
+	ADCSRA|=(1<<ADPS2);
+	ADCSRA|=(1<<ADSC);
+	while((ADCSRA & (1<<ADSC)));
 
-    if (ADCL < VOLTAGE_TRESHOLD*255) {
-      tsop ^= 1;
-      if (tsop) PORTB |= (1<<PB0);
-      else PORTB &= !(1<<PB0);
+	if (ADCL < VOLTAGE_TRESHOLD*255) {
+	tsop ^= 1;
+	if (tsop) PORTB |= (1<<PB0);
+	else PORTB &= !(1<<PB0);
 
-      counter<<=1;
-      if (counter == (1<<4)) counter=1;
-      PORTC &= !(1<<PC0);
-      PORTC &= !(1<<PC1);
-      PORTD &= !(1<<PD6);
-      PORTB &= !(1<<PB2);
-      if (counter&1) PORTC |= (1<<PC0);
-      else if (counter&(1<<1)) PORTC |= (1<<PC1);
-      else if (counter&(1<<2)) PORTB |= (1<<PB2);
-      else PORTD |= (1<<PD6);
+	counter<<=1;
+	if (counter == (1<<4)) counter=1;
+		PORTC &= !(1<<PC0);
+		PORTC &= !(1<<PC1);
+		PORTD &= !(1<<PD6);
+		PORTB &= !(1<<PB2);
+		if (counter&1) PORTC |= (1<<PC0);
+		else if (counter&(1<<1)) PORTC |= (1<<PC1);
+		else if (counter&(1<<2)) PORTB |= (1<<PB2);
+		else PORTD |= (1<<PD6);
 
-      _delay_ms(10);
-    }
-    else {
-      PORTC |= (1<<PC0);
-      PORTC |= (1<<PC1);
-      PORTD |= (1<<PD6);
-      PORTB |= (1<<PB2);
-    }
-    */
+		_delay_ms(10);
+	}
+	else {
+		PORTC |= (1<<PC0);
+		PORTC |= (1<<PC1);
+		PORTD |= (1<<PD6);
+		PORTB |= (1<<PB2);
+	}
+*/
 	}
 
 	return 0;
