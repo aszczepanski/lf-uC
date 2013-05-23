@@ -7,7 +7,8 @@ OBJ_CPY = avr-objcopy
 IHEX = ihex
 EEPROM = .eeprom
 
-SRCS = main.c HD44780.c
+SRCS = main.c
+#SRCS = debug.c HD44780
 OBJS=$(addprefix ./obj/, $(addsuffix .o, $(SRCS)))
 
 LFUSE = 0xff

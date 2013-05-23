@@ -3,41 +3,34 @@
 #include <util/delay.h>
 #include <stdlib.h>
 
-#include "HD44780.h"
-
 // zmienne wykorzystywane w algorytmie PID
 #define kp 6.0
 #define ki 0.0
 #define kd 0.0
-#define Tp 40.0
+#define Tp 42.0
 float P, I, D, dif, pdif, rate, turn;
 
-volatile int count;
 volatile int petla;
 
 short active[14], on_track;
 int l_speed, r_speed;
 
 int i;
-char tab[33];
 
 volatile short tsop;
 
 // obsluga przerwania timera0
 // zeby co okreslony czas (100x/s) sprawdzac stan czujnikow i ustawiac predkosc silnikow
 ISR(TIMER0_COMP_vect) {
-//	count++;
-//	if (count == 50) {
-		petla = 1;
-//		count = 0;
-//	}
+	// podczas obslugi przerwania nalezy wykonywac mozliwie najmniej operacji
+	// dlatego ustawiana jest jedynie zmienna petla
+	petla = 1;
 }
 
 // obsluga przerwania INT1
 // pochodzi z atmegi8, sluzy wlaczeniu/wylaczeniu robota
 ISR(INT1_vect) {
 	tsop ^= 1;
-//	tsop = 0;
 }
 
 void init_ports() {
@@ -69,7 +62,7 @@ void init_timers() {
 	// inicjalizacja timera 0 - opis bitow od str. 84 datasheeta
 	// ponizej to co jest wlaczone
 	// mode 2 - CTC (Clear Timer on Compare match)
-	// normal port operacion, OC2 disconnected
+	// normalna operacja portowa, OC2 rozloczone
 	// zegar - CLK/1024 - taktowanie zegara 16MHz/1024 = 15625Hz
 	TCCR0=(1<<WGM01)|(1<<CS02)|(1<<CS00);
 	// wartosc przy ktorej zegar sie zeruje i generowane jest przerwanie
@@ -78,7 +71,7 @@ void init_timers() {
 	TIMSK |= (1<<OCIE0);
 
 	// inicjalizacja timera 1 - opis bitow od str. 112 datasheeta
-	// Clear OC1A/OC1B on compare match, set OC1A/OC1B at BOTTOM, (non-inverting mode)
+	// wyczysc OC1A/OC1B przy porownaniu, ustaw OC1A/OC1B na dole, (tryb nie odwracajacy)
  	// Fast PWM, 8-bit
 	// zegar bez skalowania, co daje czestotliwosc 16MHz/1/256=62.5kHz
 	TCCR1A=(1<<COM1A1)|(1<<COM1B1)|(1<<WGM10);
@@ -88,9 +81,10 @@ void init_timers() {
 void init_interrupts() {
 	// inicjalizacja przerwan zewnetrznych - od str. 67 datasheeta
 	// MCU Control Register
-	//Any logical change on INT1 generates an interrupt request.
+	// jakakolwiek zmiana logiczna na wejsciu INT1 generuje przerwanie
 	MCUCR |= (1<<ISC10);
-	// When the INT1 bit is set (one) and the I-bit in the Status Register (SREG) is set (one), the external pin interrupt is enabled 
+	// Kiedy bit INT1 jest ustawiony i I-bit w Status Register (SREG) jest ustawiony
+	// przerwanie poprzez wejscie zewnetrzne jest wlaczone
 	GICR |= (1<<INT1);
 }
 
@@ -269,149 +263,24 @@ void set_motors() {
 	OCR1A = abs(l_speed);
 	OCR1B = abs(r_speed);
 	
-//	OCR1A = 0;
-//	OCR1B = 0;
-
-}
-
-// procedura wypisujaca na ekran stan kazdego z czujnikow
-// oraz predkosc silnikow
-// ekran nalezy podlaczyc przed uruchomieniem robota!!!
-void print_sensors() {
-	LCD_Clear();
-
-	if (PINA&(1<<PA1)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINA&(1<<PA2)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINA&(1<<PA3)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINA&(1<<PA4)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINA&(1<<PA5)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINA&(1<<PA6)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINA&(1<<PA7)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC7)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC6)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC5)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC4)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC3)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC2)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-	if (PINC&(1<<PC1)) {
-		LCD_WriteText("1");
-	}
-	else {
-		LCD_WriteText("0");
-	}
-
-	LCD_GoTo(0,1);
-	LCD_WriteText("l=");
-	itoa(l_speed,tab,10);
-	LCD_WriteText(tab);
-	
-	LCD_WriteText("   r=");
-	itoa(r_speed,tab,10);
-	LCD_WriteText(tab);
-
-
 }
 
 int main(void) {
+	// inicjalizacja
 	init_ports();
 	init_timers();
 	init_interrupts();
-	LCD_Initalize();
 
 	dif = I = 0;
 	
-//	tsop = 1;
-	tsop=0;
+	// po wlaczeniu zasilania robot nie jedzie, dopiero po otrzymaniu sygnalu z pilota
+	tsop = 0;
 		
-	count = 0;
 	petla = 0;
 
+	// poczatkowo predkosci obu silnikow sa zerowane
 	OCR1A = 0;
 	OCR1B = 0;
-
-	// lewe do przodu
-//	PORTB |= (1<<PB0);
-//	PORTA &= ~(1<<PA0);
-
-	// lewe do tylu
-//	PORTA |= (1<<PA0);
-//	PORTB &= ~(1<<PB0);
-
-	// prawe do przodu
-//	PORTB |= (1<<PB2);
-//	PORTB &= ~(1<<PB1);
-
-	// prawe do tylu
-//	PORTB |= (1<<PB1);
-//	PORTB &= ~(1<<PB2);
-
-	LCD_Clear();
-	LCD_WriteText("Line Follower");
 
 	// wlaczenie obslugi przerwan
 	sei();
@@ -420,8 +289,6 @@ int main(void) {
 		if (petla) {
 			set_motors();
 
-//			print_sensors();
-			
 			petla = 0;
 		}
 	}
