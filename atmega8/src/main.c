@@ -33,16 +33,6 @@ void init_rc5()
   sei();
 }
 
-void init_adc() {
-        ADCSRA = (1<<ADEN) //ADEN=1 włączenie przetwornika ADC)
-                |(1<<ADPS0) // ustawienie preskalera na 128  
-                |(1<<ADPS1)
-                |(1<<ADPS2);
-
-        ADMUX = (1<<REFS0)
-                |(1<<ADLAR);
-}
-
 //---------------------------------------------------------------
 // Procedura obsługi przerwania  Timer0 Overflow
 //---------------------------------------------------------------
@@ -166,39 +156,33 @@ volatile uint command;
 
 int main(void) {
 
-//	init_adc();
-
 	short tsop = 0;
 
 	// inicjalizacja odbiornika podczerwieni TSOP
 	init_rc5();
 	
-	// wlaczenie obslugi przerwan
-	sei();
-
 	// ustawienie portow I/O
 
 	// LED1
 	DDRC |= (1<<PC0);
-//	PORTC |= (1<<PC0);
+	PORTC &= ~(1<<PC0);
 
 	// LED2
 	DDRC |= (1<<PC1);
-//	PORTC |= (1<<PC1);
+	PORTC &= ~(1<<PC1);
 
 	// LED3
 	DDRB |= (1<<PB2);
-//	PORTB |= (1<<PB2);
+	PORTB &= ~(1<<PB2);
 
 	// LED4
 	DDRD |= (1<<PD6);
-//	PORTD |= (1<<PD6);
+	PORTD &= ~(1<<PD6);
 
 	// TSOP
 	DDRB |= (1<<PB0);
 	PORTB &= ~(1<<PB0);
 
-	int counter = (1<<3);
 	uint cmd, toggle, device;
 	u8 out;
 	int on_state = 0, toggle_state = -1;
@@ -223,50 +207,15 @@ int main(void) {
 						PORTB |= (1<<PB0);
 					}
 					else {
-						PORTC &= !(1<<PC0);
-						PORTC &= !(1<<PC1);
-						PORTD &= !(1<<PD6);
-						PORTB &= !(1<<PB2);
+						PORTC &= ~(1<<PC0);
+						PORTC &= ~(1<<PC1);
+						PORTD &= ~(1<<PD6);
+						PORTB &= ~(1<<PB2);
 						PORTB &= ~(1<<PB0);
 					}
 				}
 			}
 		}
-
-		// battery low
-	/*
-	ADMUX = ADC_VREF_TYPE | (1<<MUX2);
-	ADCSRA|=(1<<ADEN);
-	ADCSRA|=(1<<ADPS1);
-	ADCSRA|=(1<<ADPS2);
-	ADCSRA|=(1<<ADSC);
-	while((ADCSRA & (1<<ADSC)));
-
-	if (ADCL < VOLTAGE_TRESHOLD*255) {
-	tsop ^= 1;
-	if (tsop) PORTB |= (1<<PB0);
-	else PORTB &= !(1<<PB0);
-
-	counter<<=1;
-	if (counter == (1<<4)) counter=1;
-		PORTC &= !(1<<PC0);
-		PORTC &= !(1<<PC1);
-		PORTD &= !(1<<PD6);
-		PORTB &= !(1<<PB2);
-		if (counter&1) PORTC |= (1<<PC0);
-		else if (counter&(1<<1)) PORTC |= (1<<PC1);
-		else if (counter&(1<<2)) PORTB |= (1<<PB2);
-		else PORTD |= (1<<PD6);
-
-		_delay_ms(10);
-	}
-	else {
-		PORTC |= (1<<PC0);
-		PORTC |= (1<<PC1);
-		PORTD |= (1<<PD6);
-		PORTB |= (1<<PB2);
-	}
-*/
 	}
 
 	return 0;
