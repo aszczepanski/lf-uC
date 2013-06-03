@@ -8,7 +8,7 @@ IHEX = ihex
 EEPROM = .eeprom
 
 SRCS = main.c
-#SRCS = debug.c HD44780
+#SRCS = debug.c HD44780.c
 OBJS=$(addprefix ./obj/, $(addsuffix .o, $(SRCS)))
 
 LFUSE = 0xff

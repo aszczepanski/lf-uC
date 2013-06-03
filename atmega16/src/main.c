@@ -3,11 +3,13 @@
 #include <util/delay.h>
 #include <stdlib.h>
 
+#define thr 80
+
 // zmienne wykorzystywane w algorytmie PID
-#define kp 6.0
-#define ki 0.0
-#define kd 0.0
-#define Tp 42.0
+#define kp 19.4
+#define ki 0.52
+#define kd 5.4
+#define Tp 46.0//36
 float P, I, D, dif, pdif, rate, turn;
 
 volatile int petla;
@@ -31,6 +33,16 @@ ISR(TIMER0_COMP_vect) {
 // pochodzi z atmegi8, sluzy wlaczeniu/wylaczeniu robota
 ISR(INT1_vect) {
 	tsop ^= 1;
+}
+
+void init_adc() {
+        ADCSRA = (1<<ADEN) //ADEN=1 włączenie przetwornika ADC)
+                |(1<<ADPS0) // ustawienie preskalera na 128  
+                |(1<<ADPS1)
+                |(1<<ADPS2);
+
+        ADMUX = (1<<REFS0)
+                |(1<<ADLAR);
 }
 
 void init_ports() {
@@ -88,6 +100,8 @@ void init_interrupts() {
 	GICR |= (1<<INT1);
 }
 
+int sensors[14];
+
 void set_motors() {
 	
 	pdif = dif;
@@ -97,117 +111,82 @@ void set_motors() {
 
 	// odczyt stanu sensorow
 
-	if ((PINA&(1<<PA1)) && (active[0] || active[1])) { // SENS_1
-		dif -= 6.5;
-		active[0] = 1;
-		on_track++;
+	if (PINA&(1<<PA1)) {
+		sensors[0] = 1;
 	}
 	else {
-		active[0] = 0;
+		sensors[0] = 0;
 	}
-	if ((PINA&(1<<PA2)) && (active[0] || active[1] || active[2])) { // SENS_2
-		dif -= 5.5;
-		active[1] = 1;
-		on_track++;
+	if (PINA&(1<<PA2)) {
+		sensors[1] = 1;
 	}
 	else {
-		active[1] = 0;
+		sensors[1] = 0;
 	}
-	if ((PINA&(1<<PA3)) && (active[1] || active[2] || active[3])) { // SENS_3
-		dif -= 4.5;
-		active[2] = 1;
-		on_track++;
-	}
-	else {
-		active[2] = 0;
-	}
-	if ((PINA&(1<<PA4)) && (active[2] || active[3] || active[4])) { // SENS_4
-		dif -= 3.5;
-		active[3] = 1;
-		on_track++;
+	// PA3-PA6 odczytywane z ADC
+	if (PINA&(1<<PA7)) {
+		sensors[6] = 1;
 	}
 	else {
-		active[3] = 0;
+		sensors[6] = 0;
 	}
-	if ((PINA&(1<<PA5)) && (active[3] || active[4] || active[5])) { // SENS_5
-		dif -= 2.5;
-		active[4] = 1;
-		on_track++;
+	if (PINC&(1<<PC7)) {
+		sensors[7] = 1;
 	}
 	else {
-		active[4] = 0;
+		sensors[7] = 0;
 	}
-	if ((PINA&(1<<PA6)) && (active[4] || active[5] || active[6])) { // SENS_6
-		dif -= 1.5;
-		active[5] = 1;
-		on_track++;
+	if (PINC&(1<<PC6)) {
+		sensors[8] = 1;
 	}
 	else {
-		active[5] = 0;
+		sensors[8] = 0;
 	}
-	if ((PINA&(1<<PA7)) && (active[5] || active[6] || active[7])) { // SENS_7
-		dif -= 0.5;
-		active[6] = 1;
-		on_track++;
+	if (PINC&(1<<PC5)) {
+		sensors[9] = 1;
 	}
 	else {
-		active[6] = 0;
+		sensors[9] = 0;
 	}
-	if ((PINC&(1<<PC7)) && (active[6] || active[7] || active[8])) { // SENS_8
-		dif += 0.5;
-		active[7] = 1;
-		on_track++;
+	if (PINC&(1<<PC4)) {
+		sensors[10] = 1;
 	}
 	else {
-		active[7] = 0;
+		sensors[10] = 0;
 	}
-	if ((PINC&(1<<PC6)) && (active[7] || active[8] || active[9])) { // SENS_9
-		dif += 1.5;
-		active[8] = 1;
-		on_track++;
+	if (PINC&(1<<PC3)) {
+		sensors[11] = 1;
 	}
 	else {
-		active[8] = 0;
+		sensors[11] = 0;
 	}
-	if ((PINC&(1<<PC5)) && (active[8] || active[9] || active[10])) { // SENS_10
-		dif += 2.5;
-		active[9] = 1;
-		on_track++;
+	if (PINC&(1<<PC2)) {
+		sensors[12] = 1;
 	}
 	else {
-		active[9] = 0;
+		sensors[12] = 0;
 	}
-	if ((PINC&(1<<PC4)) && (active[9] || active[10] || active[11])) { // SENS_11
-		dif += 3.5;
-		active[10] = 1;
-		on_track++;
+	if (PINC&(1<<PC1)) {
+		sensors[13] = 1;
 	}
 	else {
-		active[10] = 0;
+		sensors[13] = 0;
 	}
-	if ((PINC&(1<<PC3)) && (active[10] || active[11] || active[12])) { // SENS_12
-		dif += 4.5;
-		active[11] = 1;
-		on_track++;
+
+	for (i=3; i<=6; i++) {
+		ADMUX &= 0b11100000;            // zerujemy bity MUX odpowiedzialne za wybór kanału (s. 255 w DS) 
+		ADMUX |= i;                      // wybieramy kanał przetwornika 
+		ADCSRA |= (1<<ADSC);            // uruchamiamy pomiar 
+		while(ADCSRA & (1<<ADSC)) {};
+
+		sensors[i-1] = (ADCH>thr) ? (1) : (0);
 	}
-	else {
-		active[11] = 0;
-	}
-	if ((PINC&(1<<PC2)) && (active[11] || active[12] || active[13])) { // SENS_13
-		dif += 5.5;
-		active[12] = 1;
-		on_track++;
-	}
-	else {
-		active[12] = 0;
-	}
-	if ((PINC&(1<<PC1)) && (active[12] || active[13])) { // SENS_14
-		dif += 6.5;
-		active[13] = 1;
-		on_track++;
-	}
-	else {
-		active[13] = 0;
+
+	for (i=0; i<14; i++) {
+		if (sensors[i]) {
+			dif += (float)i - 6.5;
+			on_track++;
+		}
 	}
 
 	if (!on_track) {
@@ -236,12 +215,17 @@ void set_motors() {
 	if (tsop) {
 		l_speed = round(Tp + turn);
 		r_speed = round(Tp - turn);
+/*		if (on_track >= 10) {
+			l_speed = Tp;
+			r_speed = Tp;
+		}
+*/
 	}
 	else {
 		l_speed = 0;
 		r_speed = 0;
 	}	
-	
+
 	if (l_speed > 0) {
 		PORTB |= (1<<PB0);
 		PORTA &= ~(1<<PA0);
@@ -270,6 +254,8 @@ int main(void) {
 	init_ports();
 	init_timers();
 	init_interrupts();
+
+	init_adc();
 
 	dif = I = 0;
 	

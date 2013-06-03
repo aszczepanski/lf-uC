@@ -33,6 +33,16 @@ void init_rc5()
   sei();
 }
 
+void init_adc() {
+        ADCSRA = (1<<ADEN) //ADEN=1 włączenie przetwornika ADC)
+                |(1<<ADPS0) // ustawienie preskalera na 128  
+                |(1<<ADPS1)
+                |(1<<ADPS2);
+
+        ADMUX = (1<<REFS0)
+                |(1<<ADLAR);
+}
+
 //---------------------------------------------------------------
 // Procedura obsługi przerwania  Timer0 Overflow
 //---------------------------------------------------------------
@@ -48,17 +58,17 @@ ISR(TIMER0_OVF_vect)
    if(!inttemp ) timerH++;
 }
 
+volatile u8 temp;
+volatile u8 ref1;
+volatile u8 ref2;
+volatile u8 bitcnt;
+volatile uint command;
+
 //---------------------------------------------------------------
 // Funkcja wykrywa i dekoduje  komendę pilota RC5                                             
 //---------------------------------------------------------------
  uint detect()
  {
-    u8 temp;
-    u8 ref1;
-    u8 ref2;
-    u8 bitcnt;
-    uint command;
-
     timerH  = 0;
     timerL  = 0;
 
@@ -156,6 +166,8 @@ ISR(TIMER0_OVF_vect)
 
 int main(void) {
 
+//	init_adc();
+
 	short tsop = 0;
 
 	// inicjalizacja odbiornika podczerwieni TSOP
@@ -187,7 +199,6 @@ int main(void) {
 	PORTB &= ~(1<<PB0);
 
 	int counter = (1<<3);
-	short running = 1;
 	uint cmd, toggle, device;
 	u8 out;
 	int on_state = 0, toggle_state = -1;
