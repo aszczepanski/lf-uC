@@ -6,12 +6,12 @@
 #define thr 80
 
 // zmienne wykorzystywane w algorytmie PID
-#define kp 19.4
+#define kp 13
 #define ki 0.52
-#define kd 5.4
-#define Tp 46.0//36
+#define kd 8
+//#define Tp 50//46.0//36
 #define dead 22
-float P, I, D, dif, pdif, rate, turn;
+float P, I, D, dif, pdif, rate, turn, Tp;
 
 volatile int petla;
 
@@ -79,7 +79,7 @@ void init_timers() {
 	// zegar - CLK/1024 - taktowanie zegara 16MHz/1024 = 15625Hz
 	TCCR0=(1<<WGM01)|(1<<CS02)|(1<<CS00);
 	// wartosc przy ktorej zegar sie zeruje i generowane jest przerwanie
-	OCR0 = 156; // dla 156 czestotliwosc przerwan to ok. 100Hz
+	OCR0 = 100; // dla 156 czestotliwosc przerwan to ok. 100Hz
 	// odmaskowanie przerwania pochodzacego z timera 0
 	TIMSK |= (1<<OCIE0);
 
@@ -185,10 +185,20 @@ void set_motors() {
 
 	for (i=0; i<14; i++) {
 		if (sensors[i]) {
-			dif += (float)i - 6.5;
+			dif += ((float)i - 6.5);
 			on_track++;
 		}
 	}
+  if(sensors[0]) dif -= 5.0;
+  if(sensors[1]) dif -= 3.5;
+  if(sensors[13]) dif += 5.0;
+  if(sensors[12]) dif += 3.5;
+  //Tp = 60;
+  if(on_track >= 5) {
+    Tp = 48;    
+  } else {
+    Tp = 60;
+  }
 
 	if (!on_track) {
 		for (i=0; i<14; i++) {
@@ -213,7 +223,7 @@ void set_motors() {
 
 	turn = P + I + D;
 	
-	if (tsop) {
+	//if (tsop) {
 		l_speed = round(Tp + turn);
 		r_speed = round(Tp - turn);
     if(l_speed < dead) l_speed -= 2*dead;
@@ -223,11 +233,13 @@ void set_motors() {
 			r_speed = Tp;
 		}
 */
+  /*
 	}
 	else {
 		l_speed = 0;
 		r_speed = 0;
 	}	
+  */
 
 	if (l_speed > 0) {
 		PORTB |= (1<<PB0);
