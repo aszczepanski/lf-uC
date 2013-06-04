@@ -194,7 +194,7 @@ void set_motors() {
 		for (i=0; i<14; i++) {
 			active[i] = 1;
 		}
-		dif = 0;
+		dif = pdif;
 	}
 
 	
