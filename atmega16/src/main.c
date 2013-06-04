@@ -10,6 +10,7 @@
 #define ki 0.52
 #define kd 5.4
 #define Tp 46.0//36
+#define dead 22
 float P, I, D, dif, pdif, rate, turn;
 
 volatile int petla;
@@ -215,6 +216,8 @@ void set_motors() {
 	if (tsop) {
 		l_speed = round(Tp + turn);
 		r_speed = round(Tp - turn);
+    if(l_speed < dead) l_speed -= 2*dead;
+    if(r_speed < dead) r_speed -= 2*dead;
 /*		if (on_track >= 10) {
 			l_speed = Tp;
 			r_speed = Tp;
