@@ -212,7 +212,7 @@ int main(void) {
 						//PORTB &= ~(1<<PB0);
 					}
 					PORTB |= (1<<PB0);
-					_delay_ms(20);
+					_delay_ms(8);
 					PORTB &= ~(1<<PB0);
 				}
 			}

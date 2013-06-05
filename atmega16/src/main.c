@@ -6,11 +6,12 @@
 #define thr 80
 
 // zmienne wykorzystywane w algorytmie PID
-#define kp 13
-#define ki 0.52
-#define kd 8
+// przy napieciu 8.15V
+#define kp 12//11.3//3//13
+#define ki 0.52//0.075//0.52
+#define kd 7.2//6.6//29.664//8
 //#define Tp 50//46.0//36
-#define dead 22
+#define dead 21
 float P, I, D, dif, pdif, rate, turn, Tp;
 
 volatile int petla;
@@ -194,10 +195,10 @@ void set_motors() {
   if(sensors[13]) dif += 5.0;
   if(sensors[12]) dif += 3.5;
   //Tp = 60;
-  if(on_track >= 5) {
+  if(on_track >= 5 && on_track <= 9) {
     Tp = 48;    
   } else {
-    Tp = 60;
+    Tp = 62;
   }
 
 	if (!on_track) {
