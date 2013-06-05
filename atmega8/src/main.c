@@ -156,8 +156,6 @@ volatile uint command;
 
 int main(void) {
 
-	short tsop = 0;
-
 	// inicjalizacja odbiornika podczerwieni TSOP
 	init_rc5();
 	
@@ -165,19 +163,19 @@ int main(void) {
 
 	// LED1
 	DDRC |= (1<<PC0);
-	PORTC &= ~(1<<PC0);
+//	PORTC &= ~(1<<PC0);
 
 	// LED2
 	DDRC |= (1<<PC1);
-	PORTC &= ~(1<<PC1);
+//	PORTC &= ~(1<<PC1);
 
 	// LED3
 	DDRB |= (1<<PB2);
-	PORTB &= ~(1<<PB2);
+//	PORTB &= ~(1<<PB2);
 
 	// LED4
 	DDRD |= (1<<PD6);
-	PORTD &= ~(1<<PD6);
+//	PORTD &= ~(1<<PD6);
 
 	// TSOP
 	DDRB |= (1<<PB0);
@@ -204,15 +202,18 @@ int main(void) {
 						PORTC |= (1<<PC1);
 						PORTD |= (1<<PD6);
 						PORTB |= (1<<PB2);
-						PORTB |= (1<<PB0);
+						//PORTB |= (1<<PB0);
 					}
 					else {
 						PORTC &= ~(1<<PC0);
 						PORTC &= ~(1<<PC1);
 						PORTD &= ~(1<<PD6);
 						PORTB &= ~(1<<PB2);
-						PORTB &= ~(1<<PB0);
+						//PORTB &= ~(1<<PB0);
 					}
+					PORTB |= (1<<PB0);
+					_delay_ms(20);
+					PORTB &= ~(1<<PB0);
 				}
 			}
 		}

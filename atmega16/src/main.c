@@ -94,8 +94,8 @@ void init_timers() {
 void init_interrupts() {
 	// inicjalizacja przerwan zewnetrznych - od str. 67 datasheeta
 	// MCU Control Register
-	// jakakolwiek zmiana logiczna na wejsciu INT1 generuje przerwanie
-	MCUCR |= (1<<ISC10);
+	// zbocze rosnace na wejsciu INT1 generuje przerwanie
+	MCUCR |= (1<<ISC10) | (1<<ISC11);
 	// Kiedy bit INT1 jest ustawiony i I-bit w Status Register (SREG) jest ustawiony
 	// przerwanie poprzez wejscie zewnetrzne jest wlaczone
 	GICR |= (1<<INT1);
@@ -223,7 +223,7 @@ void set_motors() {
 
 	turn = P + I + D;
 	
-	//if (tsop) {
+	if (tsop) {
 		l_speed = round(Tp + turn);
 		r_speed = round(Tp - turn);
     if(l_speed < dead) l_speed -= 2*dead;
@@ -233,13 +233,13 @@ void set_motors() {
 			r_speed = Tp;
 		}
 */
-  /*
+  
 	}
 	else {
 		l_speed = 0;
 		r_speed = 0;
 	}	
-  */
+  
 
 	if (l_speed > 0) {
 		PORTB |= (1<<PB0);
