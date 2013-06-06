@@ -7,9 +7,9 @@
 
 // zmienne wykorzystywane w algorytmie PID
 // przy napieciu 8.15V
-#define kp 12//11.3//3//13
-#define ki 0.52//0.075//0.52
-#define kd 7.2//6.6//29.664//8
+#define kp 10.6//11.3//3//13
+#define ki 0.5//0.075//0.52
+#define kd 7.7//6.6//29.664//8
 //#define Tp 50//46.0//36
 #define dead 21
 float P, I, D, dif, pdif, rate, turn, Tp;
@@ -80,7 +80,7 @@ void init_timers() {
 	// zegar - CLK/1024 - taktowanie zegara 16MHz/1024 = 15625Hz
 	TCCR0=(1<<WGM01)|(1<<CS02)|(1<<CS00);
 	// wartosc przy ktorej zegar sie zeruje i generowane jest przerwanie
-	OCR0 = 100; // dla 156 czestotliwosc przerwan to ok. 100Hz
+	OCR0 = 156; // dla 156 czestotliwosc przerwan to ok. 100Hz
 	// odmaskowanie przerwania pochodzacego z timera 0
 	TIMSK |= (1<<OCIE0);
 
@@ -186,26 +186,51 @@ void set_motors() {
 
 	for (i=0; i<14; i++) {
 		if (sensors[i]) {
-			dif += ((float)i - 6.5);
+			//dif += ((float)i - 6.5);
 			on_track++;
 		}
 	}
+
+	dif += (float)sensors[6]*(-1.5);
+	dif += (float)sensors[5]*(-1.8);
+	dif += (float)sensors[4]*(-2.1);
+	dif += (float)sensors[3]*(-2.9);
+	dif += (float)sensors[2]*(-4.0);
+	dif += (float)sensors[1]*(-8.7);
+	dif += (float)sensors[0]*(-10.5);
+	dif += (float)sensors[7]*(1.5);
+	dif += (float)sensors[8]*(1.8);
+	dif += (float)sensors[9]*(2.1);
+	dif += (float)sensors[10]*(2.9);
+	dif += (float)sensors[11]*(4.0);
+	dif += (float)sensors[12]*(8.7);
+	dif += (float)sensors[13]*(10.5);
+/*
   if(sensors[0]) dif -= 5.0;
   if(sensors[1]) dif -= 3.5;
   if(sensors[13]) dif += 5.0;
   if(sensors[12]) dif += 3.5;
+*/
   //Tp = 60;
   if(on_track >= 5 && on_track <= 9) {
-    Tp = 48;    
+    Tp = 35;    
   } else {
-    Tp = 62;
+    Tp = 63;
   }
 
 	if (!on_track) {
 		for (i=0; i<14; i++) {
 			active[i] = 1;
 		}
-		dif = pdif;
+		if (pdif > 2.9) {
+			dif = 10;
+		}
+		else if (pdif < -2.9) {
+			dif = -10;
+		}
+		else {
+			dif = pdif;
+		}
 	}
 
 	
