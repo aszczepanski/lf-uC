@@ -42,5 +42,7 @@ fusew:
 fuser:
 	$(AVRDUDE) -U hfuse:r:-:h -U lfuse:r:-:h
 
+.PHONY: clean
+
 clean:
-	rm $(TARGET) $(HEX) ./obj/*
+	-rm -rf $(TARGET) $(HEX) ./obj/*
